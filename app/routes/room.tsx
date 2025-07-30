@@ -11,10 +11,27 @@ import { FloatingDock } from "@/components/ui/floating-dock";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/Providers/SockerProvider";
 import { useAppStore } from "@/Providers/store";
-import { ArrowLeftCircle, Dot, HomeIcon, MoveLeftIcon } from "lucide-react";
-import React, { useEffect } from "react";
+import {
+  ArrowLeftCircle,
+  Dot,
+  HomeIcon,
+  MessageCircle,
+  MoveLeftIcon,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Badge } from "@/components/ui/badge";
 
 const GameRoom = () => {
   const params = useParams();
@@ -41,6 +58,10 @@ const GameRoom = () => {
     setGameOver,
     pickWinGif,
   } = useAppStore();
+
+  const [selectedBtn, setSelectedBtn] = useState<
+    "one" | "two" | "three" | "four" | "five" | "six" | null
+  >(null);
 
   console.log(players);
   console.log(actionBoard);
@@ -125,6 +146,11 @@ const GameRoom = () => {
                 };
               } else {
                 resetActionBoard();
+                setUpdates((prevUpdate) => [
+                  `${prev.bowler} will be chasing now!`,
+                  `${prev.batsman} OUT!`,
+                  ...prevUpdate,
+                ]);
                 return {
                   ...prev,
                   batsman: prev.bowler,
@@ -134,6 +160,7 @@ const GameRoom = () => {
                 };
               }
             });
+            setSelectedBtn(null);
           }
           console.log(actionBoard);
         }
@@ -165,6 +192,10 @@ const GameRoom = () => {
               choice: null,
               runs: 0,
             },
+          ]);
+          setUpdates((prev) => [
+            `${parsedMessage.message.batsman} will be batting first!`,
+            ...prev,
           ]);
         }
 
@@ -203,6 +234,8 @@ const GameRoom = () => {
               return item;
             }),
           );
+
+          setUpdates((prev) => [winningMessage, ...prev]);
 
           // alert(parsedMessage.message.result)
           setGameOver(true);
@@ -407,9 +440,14 @@ const GameRoom = () => {
               <CardHeader>
                 <CardTitle>Chat</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="max-h-[30rem] overflow-auto">
                 {updates.map((item, index) => (
-                  <p key={index}>{item}</p>
+                  <p
+                    key={index}
+                    className="my-3 bg-secondary p-4 rounded-xl border-l-3 border-l-primary"
+                  >
+                    {item}
+                  </p>
                 ))}
               </CardContent>
             </Card>
@@ -458,43 +496,107 @@ const GameRoom = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-6 gap-2 mt-auto mx-auto">
+      <div className="grid grid-cols-7 gap-2 mt-auto mx-auto">
         <Button
-          onClick={() => sendChoice(roomId, userId, 1)}
+          onClick={() => {
+            setSelectedBtn("one");
+            sendChoice(roomId, userId, 1);
+          }}
+          disabled={selectedBtn !== null}
+          variant={selectedBtn === "one" ? "secondary" : "default"}
           className="rounded-full w-12 h-12 p-2 cursor-pointer"
         >
-          1
+          <img src={"/icons/one.avif"} />
         </Button>
         <Button
-          onClick={() => sendChoice(roomId, userId, 2)}
+          onClick={() => {
+            setSelectedBtn("two");
+            sendChoice(roomId, userId, 2);
+          }}
+          disabled={selectedBtn !== null}
+          variant={selectedBtn === "two" ? "secondary" : "default"}
           className="rounded-full w-12 h-12 p-2 cursor-pointer"
         >
-          2
+          <img src={"/icons/two.avif"} />
         </Button>
         <Button
-          onClick={() => sendChoice(roomId, userId, 3)}
+          onClick={() => {
+            setSelectedBtn("three");
+            sendChoice(roomId, userId, 3);
+          }}
+          disabled={selectedBtn !== null}
+          variant={selectedBtn === "three" ? "secondary" : "default"}
           className="rounded-full w-12 h-12 p-2 cursor-pointer"
         >
-          3
+          <img src={"/icons/three.avif"} />
         </Button>
         <Button
-          onClick={() => sendChoice(roomId, userId, 4)}
+          onClick={() => {
+            setSelectedBtn("four");
+            sendChoice(roomId, userId, 4);
+          }}
+          disabled={selectedBtn !== null}
+          variant={selectedBtn === "four" ? "secondary" : "default"}
           className="rounded-full w-12 h-12 p-2 cursor-pointer"
         >
-          4
+          <img src={"/icons/four.avif"} />
         </Button>
         <Button
-          onClick={() => sendChoice(roomId, userId, 5)}
+          onClick={() => {
+            setSelectedBtn("five");
+            sendChoice(roomId, userId, 5);
+          }}
+          disabled={selectedBtn !== null}
+          variant={selectedBtn === "five" ? "secondary" : "default"}
           className="rounded-full w-12 h-12 p-2 cursor-pointer"
         >
-          5
+          <img src={"/icons/five.avif"} />
         </Button>
         <Button
-          onClick={() => sendChoice(roomId, userId, 6)}
-          className="rounded-full w-12 h-12 p-2 cursor-pointer"
+          onClick={() => {
+            setSelectedBtn("six");
+            sendChoice(roomId, userId, 6);
+          }}
+          disabled={selectedBtn !== null}
+          variant={selectedBtn === "six" ? "secondary" : "default"}
+          className="rounded-full w-12 h-12 p-2 cursor-pointer shadow-2xl"
         >
-          6
+          <img src={"/icons/six.avif"} />
         </Button>
+
+        <Drawer>
+          <DrawerTrigger className="w-12 h-12 rounded-full bg-secondary p-2 flex justify-center items-center lg:hidden relative">
+            <MessageCircle color="black" />
+            {updates.length > 0 && (
+              <Badge
+                className="absolute top-0 right-0 h-5 min-w-5 rounded-full px-1 font-mono tabular-nums"
+                variant={"default"}
+              >
+                {updates.length}
+              </Badge>
+            )}
+          </DrawerTrigger>
+          <DrawerContent className="min-h-[35rem] overflow-auto">
+            <DrawerHeader>
+              <DrawerTitle>Chat</DrawerTitle>
+              {/* <DrawerDescription>This action cannot be undone.</DrawerDescription> */}
+            </DrawerHeader>
+            {updates.map((item, index) => (
+              <p
+                key={index}
+                className="my-1.5 bg-secondary p-4 rounded-xl border-l-3 border-l-primary mx-3"
+              >
+                {item}
+              </p>
+            ))}
+            {/* <DrawerFooter>
+              <Button>Submit</Button>
+              <DrawerClose>
+                <Button variant="outline">Cancel</Button>
+              </DrawerClose>
+            </DrawerFooter> */}
+          </DrawerContent>
+        </Drawer>
       </div>
 
       {gameOver && (
@@ -513,8 +615,11 @@ const GameRoom = () => {
                 />
               </div>
               <p className="text-2xl text-green-700 font-semibold">
-                {actionBoard.find((item) => item.status === "W")?.player}{" "}
-                WINS!!🎉🎉
+                {actionBoard.find((item) => item.status === "W")?.player ===
+                userId
+                  ? "YOU WIN!!🎉🎉"
+                  : actionBoard.find((item) => item.status === "W")?.player +
+                    " WINS!!🎉🎉"}
               </p>
             </CardContent>
             <CardFooter className="flex justify-center items-center gap-3">
